@@ -61,8 +61,8 @@ Though this may come off as rude.
   let currentFilter = gl.NEAREST;
 
   let nativeSize = renderer.useHighQualityRender
-  ? [canvas.width, canvas.height]
-  : renderer._nativeSize;;
+    ? [canvas.width, canvas.height]
+    : renderer._nativeSize;
 
   //?create the depth buffer's texture
   //*Create it in scratch's gl so that we have it stored in there!
@@ -137,6 +137,7 @@ Though this may come off as rude.
     );
 
     gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LEQUAL);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, lastFB);
 
@@ -179,8 +180,6 @@ Though this may come off as rude.
         null
       );
 
-      console.log(nativeSize)
-
       gl.activeTexture(gl.TEXTURE0);
 
       gl.bindFramebuffer(gl.FRAMEBUFFER, lastFB);
@@ -200,7 +199,10 @@ Though this may come off as rude.
     let lastHQPen = renderer.useHighQualityRender;
 
     vm.runtime.on("BEFORE_EXECUTE", () => {
-      if (lastURL != window.location.href || lastHQPen != renderer.useHighQualityRender) {
+      if (
+        lastURL != window.location.href ||
+        lastHQPen != renderer.useHighQualityRender
+      ) {
         lastURL = window.location.href;
         lastHQPen = renderer.useHighQualityRender;
         updateCanvasSize();
@@ -290,7 +292,7 @@ Though this may come off as rude.
                   gl_FragColor = v_color;
                   highp vec4 v_depthPart = texture2D(u_depthTexture,gl_FragCoord.xy/u_res);
                   highp float v_depthcalc = (v_depthPart.r+v_depthPart.g+v_depthPart.b)/3.0;
-                  if (v_depth >= v_depthcalc - 0.075){
+                  if (v_depthcalc < v_depth){
                     gl_FragColor.a = 0.0;
                   }
                   gl_FragColor.rgb *= gl_FragColor.a;
@@ -315,7 +317,7 @@ Though this may come off as rude.
                 {
                     v_color = a_color;
                     v_texCoord = a_texCoord;
-                    v_depth = a_position.z;
+                    v_depth = a_position.z * 3.0;
                     gl_Position = a_position * vec4(a_position.w,a_position.w,0,1);
                 }
             `,
@@ -334,8 +336,8 @@ Though this may come off as rude.
                 {
                     gl_FragColor = texture2D(u_texture, v_texCoord) * v_color;
                     highp vec4 v_depthPart = texture2D(u_depthTexture,gl_FragCoord.xy/u_res);
-                    highp float v_depthcalc = (v_depthPart.r+v_depthPart.g+v_depthPart.b)/3.0;
-                    if (v_depth >= v_depthcalc - 0.075){
+                    highp float v_depthcalc = (v_depthPart.r+v_depthPart.g+v_depthPart.b);
+                    if (v_depthcalc < v_depth){
                       gl_FragColor.a = 0.0;
                     }
                     gl_FragColor.rgb *= gl_FragColor.a;
@@ -355,7 +357,7 @@ Though this may come off as rude.
                 void main()
                 {
                     v_depth = a_position.z*3.0;
-                    gl_Position = a_position * vec4(a_position.w,a_position.w,1,1);
+                    gl_Position = a_position * vec4(a_position.w,a_position.w,a_position.w,1);
                 }
             `,
         frag: `
@@ -924,10 +926,10 @@ Though this may come off as rude.
         color4f: [1, 1, 1, 0.011],
         diameter: 1,
       },
-      InativeSize[0]/2,
-      InativeSize[1]/2,
-      InativeSize[0]/2,
-      InativeSize[1]/2
+      InativeSize[0] / 2,
+      InativeSize[1] / 2,
+      InativeSize[0] / 2,
+      InativeSize[1] / 2
     );
   };
 
